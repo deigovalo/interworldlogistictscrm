@@ -11,6 +11,7 @@ export interface AdminUser {
     company_name: string | null
     phone: string | null
     role: string
+    status: string
     email_verified: boolean
     created_at: Date
 }
@@ -18,7 +19,7 @@ export interface AdminUser {
 // Get all users (admin)
 export async function getAllUsers(filters?: { search?: string; role?: string }) {
     let query =
-        "SELECT id, email, first_name, last_name, company_name, phone, role, email_verified, created_at FROM users WHERE 1=1"
+        "SELECT id, email, first_name, last_name, company_name, phone, role, status, email_verified, created_at FROM users WHERE 1=1"
 
     if (filters?.search) {
         query += ` AND (email ILIKE '%${filters.search}%' OR first_name ILIKE '%${filters.search}%' OR last_name ILIKE '%${filters.search}%')`
@@ -46,9 +47,9 @@ export async function createUserAdmin(data: {
     const passwordHash = await hashPassword(data.password)
 
     const result = await sql`
-    INSERT INTO users (email, password_hash, first_name, last_name, company_name, phone, role, email_verified)
-    VALUES (${data.email}, ${passwordHash}, ${data.first_name}, ${data.last_name}, ${data.company_name}, ${data.phone}, ${"usuario"}, true)
-    RETURNING id, email, first_name, last_name, company_name, phone, role, email_verified, created_at
+    INSERT INTO users (email, password_hash, first_name, last_name, company_name, phone, role, status, email_verified)
+    VALUES (${data.email}, ${passwordHash}, ${data.first_name}, ${data.last_name}, ${data.company_name}, ${data.phone}, ${"usuario"}, ${"activo"}, true)
+    RETURNING id, email, first_name, last_name, company_name, phone, role, status, email_verified, created_at
   `
 
     return result[0]
@@ -57,7 +58,7 @@ export async function createUserAdmin(data: {
 // Update user (admin)
 export async function updateUserAdmin(
     userId: number,
-    data: { first_name?: string; last_name?: string; company_name?: string; phone?: string },
+    data: { first_name?: string; last_name?: string; company_name?: string; phone?: string; role?: string; status?: string },
 ) {
     let query = "UPDATE users SET"
     const updates: string[] = []
@@ -83,12 +84,22 @@ export async function updateUserAdmin(
         values.push(data.phone)
     }
 
+    if (data.role) {
+        updates.push(`role = $${values.length + 1}`)
+        values.push(data.role)
+    }
+
+    if (data.status) {
+        updates.push(`status = $${values.length + 1}`)
+        values.push(data.status)
+    }
+
     if (updates.length === 0) return null
 
     query +=
         " " +
         updates.join(", ") +
-        ` WHERE id = $${values.length + 1} RETURNING id, email, first_name, last_name, company_name, phone, role, email_verified, created_at`
+        ` WHERE id = $${values.length + 1} RETURNING id, email, first_name, last_name, company_name, phone, role, status, email_verified, created_at`
     values.push(userId)
 
     const result = await sql.query(query, values)
@@ -97,13 +108,11 @@ export async function updateUserAdmin(
 
 // Deactivate user (soft delete)
 export async function deactivateUser(userId: number) {
-    // We can add an 'active' column or use a soft delete approach
-    // For now, we'll use a simple approach - you can extend this later
     const result = await sql`
     UPDATE users
-    SET role = 'inactivo'
+    SET status = 'inactivo'
     WHERE id = ${userId}
-    RETURNING id, email, first_name, last_name, company_name, phone, role, email_verified, created_at
+    RETURNING id, email, first_name, last_name, company_name, phone, role, status, email_verified, created_at
   `
 
     return result.length > 0 ? result[0] : null

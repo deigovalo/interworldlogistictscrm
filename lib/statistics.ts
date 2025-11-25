@@ -113,6 +113,7 @@ export async function getAdminReports() {
         u.first_name,
         u.last_name,
         u.company_name,
+        u.status,
         COALESCE(SUM(c.monto_total), 0) as total_revenue,
         COUNT(c.id) as quote_count
       FROM users u
@@ -148,6 +149,7 @@ export async function getAdminReports() {
         id: row.id,
         name: `${row.first_name} ${row.last_name}`,
         company: row.company_name,
+        status: row.status,
         totalRevenue: Number(row.total_revenue),
         quoteCount: Number(row.quote_count),
       })),

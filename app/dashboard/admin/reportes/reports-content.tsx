@@ -13,7 +13,7 @@ interface ReportsData {
   totalQuotes: number
   approvalPercentage: number
   monthlyRevenue: Array<{ month: string; revenue: number }>
-  topClients: Array<{ id: number; name: string; company: string; totalRevenue: number; quoteCount: number }>
+  topClients: Array<{ id: number; name: string; company: string; status: string; totalRevenue: number; quoteCount: number }>
   quoteStatusDistribution: Array<{ status: string; count: number }>
 }
 

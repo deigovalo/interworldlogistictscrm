@@ -67,6 +67,7 @@ export const updateUserSchema = z.object({
     .string()
     .regex(/^[+]?[0-9\s\-()]{7,}$/)
     .optional(),
+  role: z.enum(["admin", "usuario"]).optional(),
 })
 
 export type RegisterInput = z.infer<typeof registerSchema>

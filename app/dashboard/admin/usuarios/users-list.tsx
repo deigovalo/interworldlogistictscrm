@@ -16,6 +16,7 @@ interface User {
   company_name: string
   phone: string
   role: string
+  status: string
   email_verified: boolean
   created_at: string
 }
@@ -144,8 +145,8 @@ export default function UsersList({
                     <TableCell className="text-muted-foreground">{user.role === 'admin' ? 'Administrador' : 'Usuario'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span className="text-sm">Activo</span>
+                        <span className={`w-2 h-2 rounded-full ${user.status === 'activo' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                        <span className="text-sm capitalize">{user.status || 'Inactivo'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{formatDate(user.created_at)}</TableCell>

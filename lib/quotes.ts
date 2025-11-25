@@ -95,7 +95,7 @@ export async function getQuoteWithItems(quoteId: number) {
 // Get all quotes (admin)
 export async function getAllQuotes(filters?: { estado?: string; search?: string }) {
     let query =
-        "SELECT c.id, c.user_id, c.numero_cotizacion, c.estado, c.monto_total, c.fecha, c.created_at, c.updated_at, u.email, u.first_name, u.last_name, u.company_name FROM cotizaciones c JOIN users u ON c.user_id = u.id WHERE 1=1"
+        "SELECT c.id, c.user_id, c.numero_cotizacion, c.estado, c.monto_total, c.fecha, c.created_at, c.updated_at, u.email, u.first_name, u.last_name, u.company_name, u.status as user_status FROM cotizaciones c JOIN users u ON c.user_id = u.id WHERE 1=1"
 
     if (filters?.estado) {
         query += ` AND c.estado = '${filters.estado}'`

@@ -10,6 +10,7 @@ interface TopClient {
   id: number
   name: string
   company: string
+  status: string
   totalRevenue: number
   quoteCount: number
 }
@@ -36,7 +37,7 @@ export function TopClientsCard({ data }: TopClientsCardProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((client, index) => (
+            {data.map((client) => (
               <TableRow key={client.id} className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-3">
@@ -51,14 +52,12 @@ export function TopClientsCard({ data }: TopClientsCardProps) {
                 <TableCell>
                   <Badge
                     variant="secondary"
-                    className={`font-normal ${index % 3 === 0
-                      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
-                      : index % 3 === 1
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400"
-                        : "bg-orange-100 text-orange-700 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400"
+                    className={`font-normal ${client.status === 'activo'
+                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
+                        : "bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400"
                       }`}
                   >
-                    {index % 3 === 0 ? "Active" : index % 3 === 1 ? "New" : "Regular"}
+                    {client.status === 'activo' ? "Activo" : "Inactivo"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-bold">${client.totalRevenue.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</TableCell>
