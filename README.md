@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Interworld Logistics CRM
 
-## Getting Started
+Sistema de gestión de relaciones con clientes (CRM) para Interworld Logistics, construido con tecnologías web modernas para asegurar rendimiento, escalabilidad y seguridad.
 
-First, run the development server:
+## Tecnologías
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Frontend:** [Next.js 15](https://nextjs.org/) (App Router), React, Tailwind CSS, [Shadcn/ui](https://ui.shadcn.com/).
+- **Backend:** Next.js API Routes (Serverless).
+- **Base de Datos:** [Neon](https://neon.tech/) (PostgreSQL serverless).
+- **Autenticación:** Sistema personalizado con sesiones seguras (HttpOnly Cookies), Hashing PBKDF2, y Session Fingerprinting.
+- **Seguridad:** Cumplimiento con OWASP Top 10 (ver [OWASP.md](./OWASP.md)).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Características Principales
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Autenticación Segura:** Login con validación de email, protección contra fuerza bruta y robo de sesiones.
+- **Panel de Administración:** Gestión de usuarios (crear, editar, desactivar), roles y permisos.
+- **Dashboard:** Vista general de estadísticas y métricas clave.
+- **Gestión de Cotizaciones:** Creación y seguimiento de cotizaciones para clientes.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Configuración Local
 
-## Learn More
+1.  Clonar el repositorio.
+2.  Instalar dependencias:
+    ```bash
+    npm install
+    ```
+3.  Configurar variables de entorno en `.env`:
+    ```env
+    DATABASE_URL=postgres://usuario:password@host/database
+    ```
+4.  Iniciar el servidor de desarrollo:
+    ```bash
+    npm run dev
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+## Seguridad
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este proyecto sigue estrictas prácticas de seguridad, incluyendo protección contra inyecciones SQL, XSS, y Session Hijacking. Para un análisis detallado, consulta el archivo [OWASP.md](./OWASP.md).

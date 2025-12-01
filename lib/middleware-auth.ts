@@ -9,7 +9,8 @@ export async function withAuth(request: NextRequest) {
   }
 
   try {
-    const session = await getSessionByToken(token);
+    const userAgent = request.headers.get('user-agent') || null;
+    const session = await getSessionByToken(token, userAgent);
 
     if (!session) {
       return NextResponse.redirect(new URL('/auth/login', request.url));

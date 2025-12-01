@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const passwordResult = await sql`
       SELECT password_hash FROM users WHERE id = ${user.id}
     `;
-    
+
     const passwordHash = passwordResult[0]?.password_hash || '';
 
     const isPasswordValid = await verifyPassword(validatedData.password, passwordHash);
@@ -40,12 +40,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const userAgent = request.headers.get('user-agent') || null;
+    const ip = request.headers.get('x-forwarded-for') || (request as any).ip || null;
+
     const token = generateToken();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    await createSession(user.id, token, expiresAt);
+    await createSession(user.id, token, expiresAt, userAgent, ip);
 
     const response = NextResponse.json(
-      { 
+      {
         message: 'Iniciaste sesión exitosamente',
         token,
         user: {

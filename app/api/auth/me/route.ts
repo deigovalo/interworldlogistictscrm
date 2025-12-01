@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getSessionByToken(token);
+    const userAgent = request.headers.get('user-agent') || null;
+    const session = await getSessionByToken(token, userAgent);
 
     if (!session) {
       return NextResponse.json(

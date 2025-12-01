@@ -9,7 +9,8 @@ export async function verifyToken(request: NextRequest) {
         return { session: null, error: NextResponse.json({ error: "Token requerido" }, { status: 401 }) }
     }
 
-    const session = await getSessionByToken(token)
+    const userAgent = request.headers.get("user-agent") || null
+    const session = await getSessionByToken(token, userAgent)
     if (!session) {
         return { session: null, error: NextResponse.json({ error: "Token inválido" }, { status: 401 }) }
     }

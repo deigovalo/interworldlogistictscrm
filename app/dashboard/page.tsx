@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/hooks/use-auth"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AdminStatsView } from "./admin-stats-view"
 import { UserStatsView } from "./user-stats-view"
 
