@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { verifyToken, requireAdmin } from "@/lib/api-auth"
 import { updateQuoteStatusSchema } from "@/lib/validation"
-import { getQuoteWithItems, updateQuoteStatus } from "@/lib/quotes"
+import { getQuoteDetails, updateQuoteStatus } from "@/lib/quotes"
 import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const quoteId = Number.parseInt(id)
-    const quote = await getQuoteWithItems(quoteId)
+    const quote = await getQuoteDetails(quoteId)
 
     if (!quote) {
       return NextResponse.json({ error: "Cotización no encontrada" }, { status: 404 })
