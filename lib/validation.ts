@@ -27,19 +27,17 @@ export const loginSchema = z.object({
 })
 
 export const createQuoteSchema = z.object({
-  items: z
-    .array(
-      z.object({
-        producto: z.string().min(1, "El producto es requerido"),
-        precio: z.number().positive("El precio debe ser mayor a 0"),
-        cantidad: z.number().positive("La cantidad debe ser mayor a 0"),
-      }),
-    )
-    .min(1, "Debe agregar al menos un producto"),
+  origen: z.string().min(1, "El origen es requerido"),
+  destino: z.string().min(1, "El destino es requerido"),
+  tipo_servicio: z.string().min(1, "El tipo de servicio es requerido"),
+  peso: z.coerce.number().positive("El peso debe ser positivo"),
+  volumen: z.coerce.number().positive("El volumen debe ser positivo"),
+  tipo_carga: z.string().min(1, "El tipo de carga es requerido"),
+  descripcion: z.string().optional(),
 })
 
 export const updateQuoteStatusSchema = z.object({
-  estado: z.enum(["pendiente", "aprobado", "desaprobado"], {
+  estado: z.enum(["pendiente", "respondido", "aprobado", "desaprobado", "transporte", "finalizado"], {
     error: () => ({ message: "Estado inválido" }),
   }),
 })

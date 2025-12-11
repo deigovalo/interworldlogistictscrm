@@ -6,12 +6,31 @@ export interface Cotizacion {
     id: number
     user_id: number
     numero_cotizacion: string
-    estado: "pendiente" | "aprobado" | "desaprobado"
-    monto_total: number
+    estado: "pendiente" | "respondido" | "aprobado" | "desaprobado" | "transporte" | "finalizado"
+    monto_total: number | null
     descripcion: string | null
+    origen?: string
+    destino?: string
+    tipo_servicio?: string
+    peso?: number
+    volumen?: number
+    tipo_carga?: string
+    mensaje_admin?: string
+    fecha_aceptacion?: Date
     fecha: Date
     created_at: Date
     updated_at: Date
+}
+
+export interface TransportUpdate {
+    id: number
+    cotizacion_id: number
+    estado: string
+    descripcion: string | null
+    ubicacion: string | null
+    fecha: Date
+    created_at: Date
+
 }
 
 export interface CotizacionItem {
@@ -33,31 +52,33 @@ function generateQuoteNumber(): string {
 }
 
 // Create a new quote with items
+// Create a new quote request
 export async function createQuote(
     userId: number,
-    items: Array<{ producto: string; precio: number; cantidad: number }>,
+    data: {
+        origen: string
+        destino: string
+        tipo_servicio: string
+        peso: number
+        volumen: number
+        tipo_carga: string
+        descripcion?: string
+    }
 ) {
     const numero_cotizacion = generateQuoteNumber()
-    const monto_total = items.reduce((sum, item) => sum + item.precio * item.cantidad, 0)
+    // Monto inicial es null y estado pendiente
 
-    // Insert quote
     const quoteResult = await sql`
-    INSERT INTO cotizaciones (user_id, numero_cotizacion, estado, monto_total)
-    VALUES (${userId}, ${numero_cotizacion}, ${"pendiente"}, ${monto_total})
-    RETURNING id, user_id, numero_cotizacion, estado, monto_total, fecha, created_at, updated_at
+    INSERT INTO cotizaciones (
+        user_id, numero_cotizacion, estado, 
+        origen, destino, tipo_servicio, peso, volumen, tipo_carga, descripcion
+    )
+    VALUES (
+        ${userId}, ${numero_cotizacion}, ${"pendiente"}, 
+        ${data.origen}, ${data.destino}, ${data.tipo_servicio}, ${data.peso}, ${data.volumen}, ${data.tipo_carga}, ${data.descripcion || null}
+    )
+    RETURNING *
   `
-
-    const cotizacion_id = quoteResult[0].id
-
-    // Insert items
-    for (const item of items) {
-        const subtotal = item.precio * item.cantidad
-        await sql`
-      INSERT INTO cotizacion_items (cotizacion_id, producto, precio, cantidad, subtotal)
-      VALUES (${cotizacion_id}, ${item.producto}, ${item.precio}, ${item.cantidad}, ${subtotal})
-    `
-    }
-
     return quoteResult[0]
 }
 
@@ -73,23 +94,24 @@ export async function getUserQuotes(userId: number) {
     return result
 }
 
-// Get quote details with items
-export async function getQuoteWithItems(quoteId: number) {
+// Get quote details
+export async function getQuoteDetails(quoteId: number) {
     const quote = await sql`
-    SELECT id, user_id, numero_cotizacion, estado, monto_total, fecha, created_at, updated_at
+    SELECT *
     FROM cotizaciones
     WHERE id = ${quoteId}
   `
 
     if (quote.length === 0) return null
 
-    const items = await sql`
-    SELECT id, cotizacion_id, producto, precio, cantidad, subtotal
-    FROM cotizacion_items
-    WHERE cotizacion_id = ${quoteId}
-  `
+    // Get transport history if applicable
+    const transportHistory = await sql`
+        SELECT * FROM transport_updates 
+        WHERE cotizacion_id = ${quoteId} 
+        ORDER BY fecha DESC
+    `
 
-    return { ...quote[0], items }
+    return { ...quote[0], transport_history: transportHistory }
 }
 
 // Get all quotes (admin)
@@ -164,4 +186,49 @@ export async function updateQuote(
 
     const result = await sql.query(updateQuery, values)
     return result.length > 0 ? result[0] : null
+}
+
+// Admin responds to quote with price and message
+export async function respondToQuote(quoteId: number, monto: number, mensaje: string) {
+    const result = await sql`
+        UPDATE cotizaciones
+        SET monto_total = ${monto}, mensaje_admin = ${mensaje}, estado = 'respondido', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${quoteId}
+        RETURNING *
+    `
+    return result[0]
+}
+
+// Client accepts quote
+export async function acceptQuote(quoteId: number) {
+    const result = await sql`
+        UPDATE cotizaciones
+        SET estado = 'transporte', fecha_aceptacion = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${quoteId}
+        RETURNING *
+    `
+    return result[0]
+}
+
+// Add transport update
+export async function addTransportUpdate(
+    quoteId: number,
+    data: { estado: string; descripcion?: string; ubicacion?: string }
+) {
+    const result = await sql`
+        INSERT INTO transport_updates (cotizacion_id, estado, descripcion, ubicacion)
+        VALUES (${quoteId}, ${data.estado}, ${data.descripcion || null}, ${data.ubicacion || null})
+        RETURNING *
+    `
+    return result[0]
+}
+
+// Get transport history
+export async function getTransportHistory(quoteId: number) {
+    const result = await sql`
+        SELECT * FROM transport_updates 
+        WHERE cotizacion_id = ${quoteId}
+        ORDER BY fecha DESC
+    `
+    return result
 }

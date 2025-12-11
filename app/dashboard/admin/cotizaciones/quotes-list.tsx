@@ -5,14 +5,15 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Edit } from "lucide-react"
+import { Edit, Eye } from "lucide-react"
+import Link from "next/link"
 import EditQuoteModal from "./edit-quote-modal"
 
 interface Quote {
   id: number
   numero_cotizacion: string
   estado: string
-  monto_total: number
+  monto_total: number | null
   fecha: string
   email: string
   first_name: string
@@ -151,11 +152,22 @@ export default function QuotesList({
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">{formatDate(quote.fecha)}</TableCell>
-                      <TableCell className="text-right font-bold">${quote.monto_total.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right font-bold">
+                        {quote.monto_total
+                          ? `$${quote.monto_total.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`
+                          : <span className="text-muted-foreground font-normal">Pendiente</span>}
+                      </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingQuote(quote)}>
-                          <Edit className="w-4 h-4 text-muted-foreground" />
-                        </Button>
+                        <div className="flex gap-2 justify-end">
+                          <Link href={`/dashboard/admin/cotizaciones/${quote.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Eye className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </Link>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingQuote(quote)}>
+                            <Edit className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )

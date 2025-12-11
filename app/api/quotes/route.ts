@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = createQuoteSchema.parse(body)
 
-    const quote = await createQuote(session.user_id, validatedData.items)
+    const quote = await createQuote(session.user_id, validatedData)
     return NextResponse.json(quote, { status: 201 })
   } catch (err: any) {
     console.error("Error creating quote:", err)

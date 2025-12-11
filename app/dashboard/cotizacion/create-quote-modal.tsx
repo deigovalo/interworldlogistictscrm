@@ -1,18 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Trash2 } from "lucide-react"
-
-interface QuoteItem {
-  producto: string
-  precio: number
-  cantidad: number
-}
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function CreateQuoteModal({
   onClose,
@@ -21,26 +16,20 @@ export default function CreateQuoteModal({
   onClose: () => void
   onSuccess: () => void
 }) {
-  const [items, setItems] = useState<QuoteItem[]>([{ producto: "", precio: 0, cantidad: 1 }])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [formData, setFormData] = useState({
+    origen: "",
+    destino: "",
+    tipo_servicio: "Importación",
+    peso: "",
+    volumen: "",
+    tipo_carga: "",
+    descripcion: ""
+  })
 
-  const handleItemChange = (index: number, field: keyof QuoteItem, value: any) => {
-    const newItems = [...items]
-    if (field === "producto") {
-      newItems[index][field] = value
-    } else {
-      newItems[index][field] = Number(value)
-    }
-    setItems(newItems)
-  }
-
-  const addItem = () => {
-    setItems([...items, { producto: "", precio: 0, cantidad: 1 }])
-  }
-
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +45,7 @@ export default function CreateQuoteModal({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify(formData),
       })
 
       if (!response.ok) {
@@ -72,80 +61,101 @@ export default function CreateQuoteModal({
     }
   }
 
-  const total = items.reduce((sum, item) => sum + item.precio * item.cantidad, 0)
-
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Nueva Cotización</DialogTitle>
+          <DialogTitle>Solicitar Cotización</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>}
 
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {items.map((item, index) => (
-              <div key={index} className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <label className="text-sm font-medium">Producto</label>
-                  <Input
-                    value={item.producto}
-                    onChange={(e) => handleItemChange(index, "producto", e.target.value)}
-                    placeholder="Nombre del producto"
-                    required
-                  />
-                </div>
-                <div className="w-24">
-                  <label className="text-sm font-medium">Precio</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={item.precio}
-                    onChange={(e) => handleItemChange(index, "precio", e.target.value)}
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-                <div className="w-20">
-                  <label className="text-sm font-medium">Cantidad</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={item.cantidad}
-                    onChange={(e) => handleItemChange(index, "cantidad", e.target.value)}
-                    placeholder="1"
-                    required
-                  />
-                </div>
-                <div className="w-24 text-right">
-                  <p className="text-sm font-medium text-muted-foreground">Subtotal</p>
-                  <p className="font-semibold">${(item.precio * item.cantidad).toFixed(2)}</p>
-                </div>
-                {items.length > 1 && (
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Origen</Label>
+              <Input
+                value={formData.origen}
+                onChange={e => handleChange('origen', e.target.value)}
+                required
+                placeholder="País/Ciudad origen"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Destino</Label>
+              <Input
+                value={formData.destino}
+                onChange={e => handleChange('destino', e.target.value)}
+                required
+                placeholder="País/Ciudad destino"
+              />
+            </div>
           </div>
 
-          <Button type="button" variant="outline" onClick={addItem} className="w-full bg-transparent">
-            Agregar Producto
-          </Button>
-
-          <div className="bg-slate-50 p-3 rounded flex justify-between items-center">
-            <span className="font-semibold">Total:</span>
-            <span className="text-2xl font-bold">${total.toFixed(2)}</span>
+          <div className="space-y-2">
+            <Label>Tipo de Servicio</Label>
+            <Select value={formData.tipo_servicio} onValueChange={(val) => handleChange('tipo_servicio', val)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccione servicio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Importación">Importación</SelectItem>
+                <SelectItem value="Aduanas">Agente de Aduanas</SelectItem>
+                <SelectItem value="Carga">Carga Internacional</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex gap-2 justify-end">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Peso (kg)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.peso}
+                onChange={e => handleChange('peso', e.target.value)}
+                required
+                placeholder="0.00"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Volumen (m³)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.volumen}
+                onChange={e => handleChange('volumen', e.target.value)}
+                required
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tipo de Carga</Label>
+            <Input
+              value={formData.tipo_carga}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('tipo_carga', e.target.value)}
+              required
+              placeholder="Ej: General, Peligrosa, Perecible"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Descripción Adicional</Label>
+            <Textarea
+              value={formData.descripcion}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('descripcion', e.target.value)}
+              placeholder="Detalles adicionales..."
+            />
+          </div>
+
+          <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || items.length === 0}>
-              {loading ? "Creando..." : "Crear Cotización"}
+            <Button type="submit" disabled={loading}>
+              {loading ? "Enviando..." : "Enviar Solicitud"}
             </Button>
           </div>
         </form>

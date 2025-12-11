@@ -5,11 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
+import Link from "next/link"
+import { Eye } from "lucide-react"
+import { Button } from "@/components/ui/button"
+
 interface Quote {
   id: number
   numero_cotizacion: string
   estado: string
-  monto_total: number
+  monto_total: number | null
   fecha: string
 }
 
@@ -42,8 +46,11 @@ export default function QuotesList({ refreshTrigger }: { refreshTrigger: number 
   const getStatusBadge = (estado: string) => {
     const variants: Record<string, string> = {
       pendiente: "bg-yellow-100 text-yellow-800",
+      respondido: "bg-blue-100 text-blue-800",
       aprobado: "bg-green-100 text-green-800",
       desaprobado: "bg-red-100 text-red-800",
+      transporte: "bg-purple-100 text-purple-800",
+      finalizado: "bg-gray-100 text-gray-800"
     }
     return variants[estado] || "bg-gray-100 text-gray-800"
   }
@@ -68,6 +75,7 @@ export default function QuotesList({ refreshTrigger }: { refreshTrigger: number 
                 <TableHead>Estado</TableHead>
                 <TableHead>Monto Total</TableHead>
                 <TableHead>Fecha</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,8 +85,15 @@ export default function QuotesList({ refreshTrigger }: { refreshTrigger: number 
                   <TableCell>
                     <Badge className={getStatusBadge(quote.estado)}>{quote.estado}</Badge>
                   </TableCell>
-                  <TableCell>${quote.monto_total}</TableCell>
+                  <TableCell>{quote.monto_total ? `$${quote.monto_total}` : 'Pendiente'}</TableCell>
                   <TableCell>{new Date(quote.fecha).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <Link href={`/dashboard/cotizacion/${quote.id}`}>
+                      <Button variant="ghost" size="icon">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
