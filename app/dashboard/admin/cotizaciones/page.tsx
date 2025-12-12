@@ -17,7 +17,7 @@ export default function AdminCotizacionesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Gestión de Cotizaciones</h1>
-        <p className="text-muted-foreground mt-1">Visualiza, edita y aprueba cotizaciones</p>
+        <p className="text-muted-foreground mt-1">Visualiza y aprueba cotizaciones</p>
       </div>
 
       <Card>

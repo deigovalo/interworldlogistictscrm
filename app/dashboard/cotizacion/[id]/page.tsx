@@ -24,7 +24,7 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
     async function fetchQuote() {
         try {
             const token = localStorage.getItem("auth_token")
-            const response = await fetch(`/api/quotes/${id}`, {
+            const response = await fetch(`/api/cotizaciones/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             if (response.ok) {
@@ -45,7 +45,7 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
         setActionLoading(true)
         try {
             const token = localStorage.getItem("auth_token")
-            const response = await fetch(`/api/quotes/${id}`, {
+            const response = await fetch(`/api/cotizaciones/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -188,6 +188,43 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
                                     >
                                         {actionLoading ? "Procesando..." : "ACEPTAR COTIZACIÓN"}
                                     </Button>
+                                )}
+
+                                {quote.estado === 'transporte' && (
+                                    <div className="mt-6">
+                                        {quote.transport_history?.some((h: any) => h.estado === 'Transporte Completo') ? (
+                                            <div className="bg-green-50 text-green-800 p-3 rounded border border-green-200">
+                                                <CheckCircle className="w-5 h-5 inline-block mr-2" />
+                                                Has confirmado el transporte. Esperando finalización del administrador.
+                                            </div>
+                                        ) : (
+                                            <Button
+                                                className="w-full bg-blue-600 hover:bg-blue-700"
+                                                size="lg"
+                                                onClick={async () => {
+                                                    if (!confirm("¿Confirmas que el transporte ha llegado y finalizado correctamente?")) return;
+                                                    setActionLoading(true)
+                                                    try {
+                                                        const token = localStorage.getItem("auth_token")
+                                                        const response = await fetch(`/api/cotizaciones/${id}`, {
+                                                            method: 'PATCH',
+                                                            headers: {
+                                                                'Content-Type': 'application/json',
+                                                                Authorization: `Bearer ${token}`
+                                                            },
+                                                            body: JSON.stringify({ action: 'finish_transport' })
+                                                        })
+                                                        if (response.ok) fetchQuote()
+                                                    } catch (e) { console.error(e) }
+                                                    finally { setActionLoading(false) }
+                                                }}
+                                                disabled={actionLoading}
+                                            >
+                                                <Truck className="w-4 h-4 mr-2" />
+                                                TRANSPORTE COMPLETO
+                                            </Button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         ) : (

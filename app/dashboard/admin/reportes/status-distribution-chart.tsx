@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface StatusDistribution {
@@ -43,11 +43,19 @@ export function StatusDistributionChart({ data }: StatusDistributionChartProps) 
                 cursor={{ fill: 'transparent' }}
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
-              <Bar
-                dataKey="count"
-                fill="#3b82f6"
-                radius={[4, 4, 4, 4]}
-              />
+              <Bar dataKey="count" radius={[4, 4, 4, 4]}>
+                {data.map((entry, index) => {
+                  const colors: Record<string, string> = {
+                    pendiente: "#eab308", // yellow-500
+                    respondido: "#3b82f6", // blue-500
+                    aprobado: "#22c55e", // green-500
+                    desaprobado: "#ef4444", // red-500
+                    transporte: "#a855f7", // purple-500
+                    finalizado: "#6b7280" // gray-500
+                  };
+                  return <Cell key={`cell-${index}`} fill={colors[entry.status] || "#3b82f6"} />;
+                })}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

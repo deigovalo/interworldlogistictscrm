@@ -3,6 +3,7 @@
 import type { ReactNode } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
+import { NotificationsDropdown } from "@/components/notifications-dropdown"
 import { LogOut, User, LayoutDashboard, FileText, Users, FileSpreadsheet, BarChart, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -65,6 +66,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <LayoutDashboard className="w-4 h-4" />
                 <span>Dashboard</span>
               </Link>
+
+              <NotificationsDropdown isSidebar />
 
               {user.role === "usuario" && (
                 <Link
@@ -167,8 +170,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-8">{children}</div>
+      <main className="flex-1 overflow-auto flex flex-col">
+        {/* Header Bar */}
+        <header className="h-16 border-b border-border bg-card flex items-center justify-end px-8 gap-4 sticky top-0 z-10">
+
+        </header>
+
+        <div className="p-8 flex-1">{children}</div>
       </main>
     </div>
   )

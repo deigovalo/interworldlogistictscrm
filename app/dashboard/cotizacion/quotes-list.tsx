@@ -28,7 +28,7 @@ export default function QuotesList({ refreshTrigger }: { refreshTrigger: number 
   async function fetchQuotes() {
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch("/api/quotes", {
+      const response = await fetch("/api/cotizaciones", {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -45,12 +45,12 @@ export default function QuotesList({ refreshTrigger }: { refreshTrigger: number 
 
   const getStatusBadge = (estado: string) => {
     const variants: Record<string, string> = {
-      pendiente: "bg-yellow-100 text-yellow-800",
-      respondido: "bg-blue-100 text-blue-800",
-      aprobado: "bg-green-100 text-green-800",
-      desaprobado: "bg-red-100 text-red-800",
-      transporte: "bg-purple-100 text-purple-800",
-      finalizado: "bg-gray-100 text-gray-800"
+      pendiente: "bg-yellow-100 text-yellow-700 border-yellow-200",
+      respondido: "bg-blue-100 text-blue-700 border-blue-200",
+      aprobado: "bg-green-100 text-green-700 border-green-200",
+      desaprobado: "bg-red-100 text-red-700 border-red-200",
+      transporte: "bg-purple-100 text-purple-700 border-purple-200",
+      finalizado: "bg-gray-100 text-gray-700 border-gray-200"
     }
     return variants[estado] || "bg-gray-100 text-gray-800"
   }
@@ -60,7 +60,7 @@ export default function QuotesList({ refreshTrigger }: { refreshTrigger: number 
   }
 
   return (
-    <Card>
+    <Card className="max-w-5xl mx-auto shadow-sm">
       <CardHeader>
         <CardTitle>Mis Cotizaciones</CardTitle>
       </CardHeader>
@@ -83,9 +83,9 @@ export default function QuotesList({ refreshTrigger }: { refreshTrigger: number 
                 <TableRow key={quote.id}>
                   <TableCell className="font-medium">{quote.numero_cotizacion}</TableCell>
                   <TableCell>
-                    <Badge className={getStatusBadge(quote.estado)}>{quote.estado}</Badge>
+                    <Badge className={`${getStatusBadge(quote.estado)} px-3 py-1 capitalize border-none`}>{quote.estado}</Badge>
                   </TableCell>
-                  <TableCell>{quote.monto_total ? `$${quote.monto_total}` : 'Pendiente'}</TableCell>
+                  <TableCell>{quote.monto_total ? `$${Number(quote.monto_total).toFixed(2)}` : <span className="text-muted-foreground italic">Pendiente</span>}</TableCell>
                   <TableCell>{new Date(quote.fecha).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <Link href={`/dashboard/cotizacion/${quote.id}`}>

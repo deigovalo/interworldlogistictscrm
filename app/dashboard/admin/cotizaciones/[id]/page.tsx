@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Truck, MapPin, Package, User, Mail, Building, Clock, DollarSign, Send } from "lucide-react"
+import { Truck, MapPin, Package, User, Mail, Building, Clock, DollarSign, Send, CheckCircle } from "lucide-react"
 
 export default function AdminQuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params)
@@ -32,7 +32,7 @@ export default function AdminQuoteDetailPage({ params }: { params: Promise<{ id:
     async function fetchQuote() {
         try {
             const token = localStorage.getItem("auth_token")
-            const response = await fetch(`/api/quotes/${id}`, {
+            const response = await fetch(`/api/admin/cotizaciones/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             if (response.ok) {
@@ -53,7 +53,7 @@ export default function AdminQuoteDetailPage({ params }: { params: Promise<{ id:
         setProcessing(true)
         try {
             const token = localStorage.getItem("auth_token")
-            const res = await fetch(`/api/quotes/${id}`, {
+            const res = await fetch(`/api/admin/cotizaciones/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export default function AdminQuoteDetailPage({ params }: { params: Promise<{ id:
         setProcessing(true)
         try {
             const token = localStorage.getItem("auth_token")
-            const res = await fetch(`/api/quotes/${id}/transport`, {
+            const res = await fetch(`/api/admin/cotizaciones/${id}/transport`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -132,8 +132,20 @@ export default function AdminQuoteDetailPage({ params }: { params: Promise<{ id:
                            I will do that after this file creation if needed.
                        */}
                             <div>
-                                <p className="text-muted-foreground">Usuario ID</p>
-                                <p className="font-medium">{quote.user_id}</p>
+                                <p className="text-muted-foreground">Cliente</p>
+                                <p className="font-medium">{quote.first_name} {quote.last_name}</p>
+                            </div>
+                            <div>
+                                <p className="text-muted-foreground">Email</p>
+                                <p className="font-medium">{quote.email}</p>
+                            </div>
+                            <div>
+                                <p className="text-muted-foreground">Teléfono</p>
+                                <p className="font-medium">{quote.phone || 'No registrado'}</p>
+                            </div>
+                            <div>
+                                <p className="text-muted-foreground">Empresa</p>
+                                <p className="font-medium">{quote.company_name || 'Particular'}</p>
                             </div>
                             <div>
                                 <p className="text-muted-foreground">Fecha Solicitud</p>
@@ -215,28 +227,76 @@ export default function AdminQuoteDetailPage({ params }: { params: Promise<{ id:
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {/* Form */}
+                            {/* Form */}
                             {['transporte', 'finalizado'].includes(quote.estado) || quote.fecha_aceptacion ? (
-                                <form onSubmit={handleTransportUpdate} className="space-y-3 p-4 bg-slate-50 rounded border">
-                                    <h4 className="font-medium text-sm">Nueva Actualización</h4>
-                                    <Input
-                                        placeholder="Estado (ej: Salio de Puerto)"
-                                        value={transportForm.estado}
-                                        onChange={e => setTransportForm({ ...transportForm, estado: e.target.value })}
-                                        required
-                                    />
-                                    <Input
-                                        placeholder="Ubicación (Opcional)"
-                                        value={transportForm.ubicacion}
-                                        onChange={e => setTransportForm({ ...transportForm, ubicacion: e.target.value })}
-                                    />
-                                    <Textarea
-                                        placeholder="Descripción detalles..."
-                                        value={transportForm.descripcion}
-                                        onChange={e => setTransportForm({ ...transportForm, descripcion: e.target.value })}
-                                        className="h-20"
-                                    />
-                                    <Button size="sm" type="submit" className="w-full" disabled={processing}>Actualizar Estado</Button>
-                                </form>
+                                <div className="space-y-4">
+                                    {/* Admin Finish Action */}
+                                    {quote.estado === 'transporte' && (
+                                        <div className="p-4 bg-blue-50 border border-blue-200 rounded space-y-3">
+                                            <h4 className="font-bold text-blue-800 flex items-center gap-2">
+                                                <CheckCircle className="w-4 h-4" /> Finalizar Transporte
+                                            </h4>
+                                            {quote.transport_history?.some((h: any) => h.estado === 'Transporte Completo') ? (
+                                                <div>
+                                                    <p className="text-sm text-green-700 mb-2">✅ El cliente ha confirmado la recepción.</p>
+                                                    <Button
+                                                        onClick={async () => {
+                                                            if (!confirm("¿Desea cambiar el estado a FINALIZADO?")) return;
+                                                            setProcessing(true)
+                                                            try {
+                                                                const token = localStorage.getItem("auth_token")
+                                                                const res = await fetch(`/api/admin/cotizaciones/${id}`, {
+                                                                    method: 'PATCH',
+                                                                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                                                    body: JSON.stringify({ action: 'complete_transport' })
+                                                                })
+                                                                if (res.ok) fetchQuote()
+                                                            } catch (e) { console.error(e) }
+                                                            finally { setProcessing(false) }
+                                                        }}
+                                                        className="w-full bg-green-600 hover:bg-green-700"
+                                                        disabled={processing}
+                                                    >
+                                                        Marcar como TRANSPORTE COMPLETO
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="text-sm text-yellow-800 bg-yellow-50 p-2 rounded">
+                                                    ⚠️ Esperando que el cliente presione "Transporte Completo" para poder finalizar.
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {quote.estado !== 'finalizado' ? (
+                                        <form onSubmit={handleTransportUpdate} className="space-y-3 p-4 bg-slate-50 rounded border">
+                                            <h4 className="font-medium text-sm">Nueva Actualización</h4>
+                                            <Input
+                                                placeholder="Estado (ej: Salio de Puerto)"
+                                                value={transportForm.estado}
+                                                onChange={e => setTransportForm({ ...transportForm, estado: e.target.value })}
+                                                required
+                                            />
+                                            <Input
+                                                placeholder="Ubicación (Opcional)"
+                                                value={transportForm.ubicacion}
+                                                onChange={e => setTransportForm({ ...transportForm, ubicacion: e.target.value })}
+                                            />
+                                            <Textarea
+                                                placeholder="Descripción detalles..."
+                                                value={transportForm.descripcion}
+                                                onChange={e => setTransportForm({ ...transportForm, descripcion: e.target.value })}
+                                                className="h-20"
+                                            />
+                                            <Button size="sm" type="submit" className="w-full" disabled={processing}>Actualizar Estado</Button>
+                                        </form>
+                                    ) : (
+                                        <div className="p-4 bg-green-50 text-green-800 rounded border border-green-200 flex items-center gap-2">
+                                            <CheckCircle className="w-5 h-5" />
+                                            <span className="font-bold">El transporte ha sido marcado como FINALIZADO.</span>
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <div className="text-center p-4 text-sm text-yellow-600 bg-yellow-50 rounded">
                                     El cliente debe aceptar la cotización para iniciar el transporte.

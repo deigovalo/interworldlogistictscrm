@@ -5,9 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Edit, Eye } from "lucide-react"
+import { Eye } from "lucide-react"
 import Link from "next/link"
-import EditQuoteModal from "./edit-quote-modal"
 
 interface Quote {
   id: number
@@ -69,7 +68,6 @@ export default function QuotesList({
 }) {
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingQuote, setEditingQuote] = useState<Quote | null>(null)
 
   useEffect(() => {
     fetchQuotes()
@@ -112,7 +110,7 @@ export default function QuotesList({
 
   return (
     <>
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm max-w-7xl mx-auto">
         <CardContent className="p-0">
           {quotes.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No hay cotizaciones registradas</div>
@@ -164,9 +162,6 @@ export default function QuotesList({
                               <Eye className="w-4 h-4 text-muted-foreground" />
                             </Button>
                           </Link>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingQuote(quote)}>
-                            <Edit className="w-4 h-4 text-muted-foreground" />
-                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -178,16 +173,7 @@ export default function QuotesList({
         </CardContent>
       </Card>
 
-      {editingQuote && (
-        <EditQuoteModal
-          quote={editingQuote}
-          onClose={() => setEditingQuote(null)}
-          onSuccess={() => {
-            setEditingQuote(null)
-            setRefreshTrigger((prev) => prev + 1)
-          }}
-        />
-      )}
+
     </>
   )
 }

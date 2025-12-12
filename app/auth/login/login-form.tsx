@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { loginSchema, type LoginInput } from '@/lib/validation';
 import { ZodError } from 'zod';
+import { useAuth } from '@/hooks/use-auth';
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -57,8 +59,7 @@ export function LoginForm() {
         return;
       }
 
-      localStorage.setItem('auth_token', data.token);
-      router.push('/dashboard');
+      login(data.token, data.user);
     } catch (err) {
       if (err instanceof ZodError) {
         const fieldErrors: Record<string, string> = {};

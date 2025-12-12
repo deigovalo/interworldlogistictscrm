@@ -126,7 +126,7 @@ export default function UsersList({
                   <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Rol</TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Estado</TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Fecha de Registro</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">2F Auth</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Autenticado</TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Acciones</TableHead>
                 </TableRow>
               </TableHeader>

@@ -58,14 +58,19 @@ export async function getUserStatistics(userId: number) {
       SELECT COUNT(*) as count FROM cotizaciones WHERE user_id = ${userId} AND estado = 'pendiente'
     `
 
-    const approvedQuotesResult = await sql`
-      SELECT COUNT(*) as count FROM cotizaciones WHERE user_id = ${userId} AND estado = 'aprobado'
+    const completedQuotesResult = await sql`
+      SELECT COUNT(*) as count FROM cotizaciones WHERE user_id = ${userId} AND estado = 'finalizado'
+    `
+
+    const transportQuotesResult = await sql`
+      SELECT COUNT(*) as count FROM cotizaciones WHERE user_id = ${userId} AND estado = 'transporte'
     `
 
     return {
       totalQuotes: Number(totalQuotesResult[0]?.count || 0),
       pendingQuotes: Number(pendingQuotesResult[0]?.count || 0),
-      approvedQuotes: Number(approvedQuotesResult[0]?.count || 0),
+      completedQuotes: Number(completedQuotesResult[0]?.count || 0),
+      transportQuotes: Number(transportQuotesResult[0]?.count || 0),
     }
   } catch (error) {
     console.error("Error fetching user statistics:", error)
@@ -77,8 +82,11 @@ export async function getUserStatistics(userId: number) {
 export async function getAdminReports() {
   try {
     // Total revenue (sum of all quotes monto_total)
+    // Considering 'aprobado', 'transporte', 'finalizado' as revenue-generating statuses
     const totalRevenueResult = await sql`
-      SELECT COALESCE(SUM(monto_total), 0) as total FROM cotizaciones WHERE estado = 'aprobado'
+      SELECT COALESCE(SUM(monto_total), 0) as total 
+      FROM cotizaciones 
+      WHERE estado IN ('aprobado', 'transporte', 'finalizado')
     `
 
     // Total quotes
@@ -86,11 +94,11 @@ export async function getAdminReports() {
       SELECT COUNT(*) as count FROM cotizaciones
     `
 
-    // Approval percentage
+    // Approval percentage (respondido -> aprobado ratio, or total -> aprobado)
     const approvalStatsResult = await sql`
       SELECT 
         COUNT(*) as total,
-        COUNT(CASE WHEN estado = 'aprobado' THEN 1 END) as approved
+        COUNT(CASE WHEN estado IN ('aprobado', 'transporte', 'finalizado') THEN 1 END) as approved
       FROM cotizaciones
     `
 
@@ -100,13 +108,17 @@ export async function getAdminReports() {
         DATE_TRUNC('month', created_at)::date as month,
         COALESCE(SUM(monto_total), 0) as revenue
       FROM cotizaciones
-      WHERE estado = 'aprobado'
+      WHERE estado IN ('aprobado', 'transporte', 'finalizado')
       GROUP BY DATE_TRUNC('month', created_at)
       ORDER BY month DESC
       LIMIT 12
     `
 
     // Top 5 clients by revenue
+    // Even if status is not final, showing potential value or recently active clients is better than empty.
+    // However, for "Top Clients" by *revenue*, we should stick to "won" deals.
+    // If no won deals, we can fall back to quote count or potential value? 
+    // Let's stick to won deals (aprobado+) but include all relevant statuses.
     const topClientsResult = await sql`
       SELECT 
         u.id,
@@ -117,7 +129,7 @@ export async function getAdminReports() {
         COALESCE(SUM(c.monto_total), 0) as total_revenue,
         COUNT(c.id) as quote_count
       FROM users u
-      LEFT JOIN cotizaciones c ON u.id = c.user_id AND c.estado = 'aprobado'
+      LEFT JOIN cotizaciones c ON u.id = c.user_id AND c.estado IN ('aprobado', 'transporte', 'finalizado')
       WHERE u.role = 'usuario'
       GROUP BY u.id
       ORDER BY total_revenue DESC

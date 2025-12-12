@@ -1,7 +1,6 @@
-
 import { type NextRequest, NextResponse } from "next/server"
 import { verifyToken } from "@/lib/api-auth"
-import { getQuoteDetails, respondToQuote, acceptQuote } from "@/lib/quotes"
+import { getQuoteDetails, acceptQuote } from "@/lib/quotes"
 
 export async function GET(
     request: NextRequest,
@@ -12,15 +11,15 @@ export async function GET(
 
     try {
         const { id } = await params
-        const quote = await getQuoteDetails(Number(id))
+        const quote = await getQuoteDetails(id)
 
         if (!quote) {
             return NextResponse.json({ error: "Cotización no encontrada" }, { status: 404 })
         }
 
         const quoteData = quote as any
-        // Authorization check: User owns it OR User is Admin
-        if (session.role !== 'admin' && quoteData.user_id !== session.user_id) {
+        // Authorization check: User owns it
+        if (quoteData.user_id !== session.user_id) {
             return NextResponse.json({ error: "No autorizado" }, { status: 403 })
         }
 
@@ -43,22 +42,32 @@ export async function PATCH(
         const body = await request.json()
         const { action } = body
 
-        if (action === 'respond') {
-            if (session.role !== 'admin') {
-                return NextResponse.json({ error: "Solo admin puede responder" }, { status: 403 })
-            }
-            const { monto, mensaje } = body
-            const updated = await respondToQuote(Number(id), monto, mensaje)
-            return NextResponse.json(updated)
-        }
-        else if (action === 'accept') {
+        if (action === 'accept') {
             // Verify ownership
-            const quote = await getQuoteDetails(Number(id))
+            const quote = await getQuoteDetails(id)
             const quoteData = quote as any
             if (!quote || quoteData.user_id !== session.user_id) {
                 return NextResponse.json({ error: "No autorizado" }, { status: 403 })
             }
-            const updated = await acceptQuote(Number(id))
+            const updated = await acceptQuote(id)
+            return NextResponse.json(updated)
+        }
+
+        if (action === 'finish_transport') {
+            // Verify ownership
+            const quote = await getQuoteDetails(id)
+            const quoteData = quote as any
+            if (!quote || quoteData.user_id !== session.user_id) {
+                return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+            }
+
+            const { addTransportUpdate } = await import("@/lib/quotes")
+
+            const updated = await addTransportUpdate(id, {
+                estado: 'Transporte Completo',
+                descripcion: 'El cliente ha confirmado la finalización del transporte.'
+            })
+
             return NextResponse.json(updated)
         }
 

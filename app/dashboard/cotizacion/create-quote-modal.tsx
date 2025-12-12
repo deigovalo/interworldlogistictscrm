@@ -39,7 +39,7 @@ export default function CreateQuoteModal({
 
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch("/api/quotes", {
+      const response = await fetch("/api/cotizaciones", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

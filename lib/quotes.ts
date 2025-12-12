@@ -2,8 +2,9 @@ import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
+// Update Quote Interface for UUID and User Details
 export interface Cotizacion {
-    id: number
+    id: string
     user_id: number
     numero_cotizacion: string
     estado: "pendiente" | "respondido" | "aprobado" | "desaprobado" | "transporte" | "finalizado"
@@ -20,22 +21,27 @@ export interface Cotizacion {
     fecha: Date
     created_at: Date
     updated_at: Date
+    // User Details (Joined)
+    first_name?: string
+    last_name?: string
+    email?: string
+    phone?: string
+    company_name?: string
 }
 
 export interface TransportUpdate {
     id: number
-    cotizacion_id: number
+    cotizacion_id: string
     estado: string
     descripcion: string | null
     ubicacion: string | null
     fecha: Date
     created_at: Date
-
 }
 
 export interface CotizacionItem {
     id: number
-    cotizacion_id: number
+    cotizacion_id: string
     producto: string
     precio: number
     cantidad: number
@@ -51,7 +57,6 @@ function generateQuoteNumber(): string {
     return `COT-${timestamp}-${random}`
 }
 
-// Create a new quote with items
 // Create a new quote request
 export async function createQuote(
     userId: number,
@@ -90,16 +95,16 @@ export async function getUserQuotes(userId: number) {
     WHERE user_id = ${userId}
     ORDER BY created_at DESC
   `
-
-    return result
+    return result as any
 }
 
-// Get quote details
-export async function getQuoteDetails(quoteId: number) {
+// Get quote details with Full User Info
+export async function getQuoteDetails(quoteId: string) {
     const quote = await sql`
-    SELECT *
-    FROM cotizaciones
-    WHERE id = ${quoteId}
+    SELECT c.*, u.first_name, u.last_name, u.email, u.phone, u.company_name
+    FROM cotizaciones c
+    JOIN users u ON c.user_id = u.id
+    WHERE c.id = ${quoteId}
   `
 
     if (quote.length === 0) return null
@@ -134,7 +139,7 @@ export async function getAllQuotes(filters?: { estado?: string; search?: string 
 }
 
 // Update quote status
-export async function updateQuoteStatus(quoteId: number, estado: string) {
+export async function updateQuoteStatus(quoteId: string, estado: string) {
     const result = await sql`
     UPDATE cotizaciones
     SET estado = ${estado}, updated_at = CURRENT_TIMESTAMP
@@ -189,30 +194,45 @@ export async function updateQuote(
 }
 
 // Admin responds to quote with price and message
-export async function respondToQuote(quoteId: number, monto: number, mensaje: string) {
+import { createNotification } from "./notifications"
+
+export async function respondToQuote(quoteId: string, monto: number, mensaje: string) {
     const result = await sql`
         UPDATE cotizaciones
         SET monto_total = ${monto}, mensaje_admin = ${mensaje}, estado = 'respondido', updated_at = CURRENT_TIMESTAMP
         WHERE id = ${quoteId}
         RETURNING *
     `
-    return result[0]
+    const quote = result[0]
+    if (quote) {
+        await createNotification(
+            quote.user_id,
+            "Cotización Respondida",
+            `Tu cotización ${quote.numero_cotizacion} ha sido respondida.`,
+            `/dashboard/cotizacion/${quoteId}`
+        )
+    }
+    return quote
 }
 
 // Client accepts quote
-export async function acceptQuote(quoteId: number) {
+export async function acceptQuote(quoteId: string) {
     const result = await sql`
         UPDATE cotizaciones
         SET estado = 'transporte', fecha_aceptacion = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
         WHERE id = ${quoteId}
         RETURNING *
     `
-    return result[0]
+    const quote = result[0]
+    // Notify Adimns (assuming admin ID is 1 for now, or broadcast. For MVP, maybe skip or notify a fixed ID?)
+    // Ideally we should find all admins. For now, let's just update the DB. 
+    // real-time notifications might require websockets or polling.
+    return quote
 }
 
 // Add transport update
 export async function addTransportUpdate(
-    quoteId: number,
+    quoteId: string,
     data: { estado: string; descripcion?: string; ubicacion?: string }
 ) {
     const result = await sql`
@@ -220,11 +240,24 @@ export async function addTransportUpdate(
         VALUES (${quoteId}, ${data.estado}, ${data.descripcion || null}, ${data.ubicacion || null})
         RETURNING *
     `
+
+    // Notify Client
+    // Need to fetch quote first to get user_id
+    const quote = await sql`SELECT user_id, numero_cotizacion FROM cotizaciones WHERE id = ${quoteId}`
+    if (quote.length > 0) {
+        await createNotification(
+            quote[0].user_id,
+            "Actualización de Transporte",
+            `Nuevo estado: ${data.estado} - ${quote[0].numero_cotizacion}`,
+            `/dashboard/cotizacion/${quoteId}`
+        )
+    }
+
     return result[0]
 }
 
 // Get transport history
-export async function getTransportHistory(quoteId: number) {
+export async function getTransportHistory(quoteId: string) {
     const result = await sql`
         SELECT * FROM transport_updates 
         WHERE cotizacion_id = ${quoteId}

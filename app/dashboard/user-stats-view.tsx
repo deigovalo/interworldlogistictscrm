@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { ReportsStatCard } from "./admin/reportes/reports-components"
-import { FileText, Clock, CheckCircle } from "lucide-react"
+import { FileText, Clock, CheckCircle, Truck } from "lucide-react"
+import { ServicesCarousel } from "./services-carousel"
 
 interface UserStats {
   totalQuotes: number
   pendingQuotes: number
-  approvedQuotes: number
+  completedQuotes: number
+  transportQuotes: number
 }
 
 export function UserStatsView() {
@@ -56,7 +58,7 @@ export function UserStatsView() {
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-4">
         <ReportsStatCard
           title="Total de Cotizaciones"
           value={stats.totalQuotes}
@@ -70,12 +72,19 @@ export function UserStatsView() {
           color="orange"
         />
         <ReportsStatCard
-          title="Cotizaciones Aprobadas"
-          value={stats.approvedQuotes}
+          title="En Transporte"
+          value={stats.transportQuotes}
+          icon={<Truck className="w-6 h-6" />}
+          color="purple"
+        />
+        <ReportsStatCard
+          title="Completadas"
+          value={stats.completedQuotes}
           icon={<CheckCircle className="w-6 h-6" />}
           color="green"
         />
       </div>
+      <ServicesCarousel />
     </div>
   )
 }
