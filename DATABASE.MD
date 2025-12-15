@@ -28,7 +28,6 @@ CREATE TABLE sessions (
 );
 
 -- 3. Tabla de Cotizaciones
--- NOTA: ID migrado a UUID para no exponer numeración secuencial
 CREATE TABLE cotizaciones (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

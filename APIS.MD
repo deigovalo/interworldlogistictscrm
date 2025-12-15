@@ -1,258 +1,482 @@
 # Documentación de APIs
 
-Este documento detalla los endpoints de la API disponibles en la aplicación, incluyendo los datos que reciben y los que devuelven.
+Este documento detalla los endpoints de la API disponibles, incluyendo ejemplos de peticiones y respuestas en JSON.
 
 ## Autenticación
-La mayoría de los endpoints requieren autenticación mediante un token JWT.
-- **Header**: `Authorization: Bearer <token>`
-- **Cookie**: `auth_token` (usado por el middleware y endpoints de servidor)
 
-## Endpoints
+### 1. Iniciar Sesión (`/api/auth/login`)
+Inicia sesión de usuario y establece la cookie de sesión.
 
-### Autenticación (`/api/auth`)
+- **Método:** `POST`
+- **Endpoint:** `/api/auth/login`
+- **Acceso:** Público
 
-#### 1. Login
-- **Método**: `POST`
-- **URL**: `/api/auth/login`
-- **Descripción**: Inicia sesión de usuario.
-- **Request Body**:
-  ```json
-  {
+**Request Body (JSON):**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Iniciaste sesión exitosamente",
+  "token": "jwt_token_string",
+  "user": {
+    "id": 1,
     "email": "user@example.com",
-    "password": "password123"
-  }
-  ```
-- **Response (200 OK)**:
-  ```json
-  {
-    "message": "Iniciaste sesión exitosamente",
-    "token": "jwt_token_string",
-    "user": {
-      "id": 1,
-      "email": "user@example.com",
-      "first_name": "John",
-      "last_name": "Doe",
-      "role": "usuario"
-    }
-  }
-  ```
-- **Response (Error)**: 401 Unauthorized, 403 Forbidden (Email no verificado).
-
-#### 2. Logout
-- **Método**: `POST`
-- **URL**: `/api/auth/logout`
-- **Descripción**: Cierra la sesión del usuario y elimina la cookie.
-- **Request**: Cookie `auth_token`.
-- **Response (200 OK)**:
-  ```json
-  {
-    "message": "Logged out successfully"
-  }
-  ```
-
-#### 3. Registro
-- **Método**: `POST`
-- **URL**: `/api/auth/register`
-- **Descripción**: Registra un nuevo usuario.
-- **Request Body**:
-  ```json
-  {
     "first_name": "John",
     "last_name": "Doe",
-    "company_name": "Company Inc",
-    "phone": "1234567890",
+    "role": "usuario"
+  }
+}
+```
+
+### 2. Cerrar Sesión (`/api/auth/logout`)
+Cierra la sesión del usuario.
+
+- **Método:** `POST`
+- **Endpoint:** `/api/auth/logout`
+- **Acceso:** Público (requiere cookie)
+
+**Response (200 OK):**
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+### 3. Registro (`/api/auth/register`)
+Registra un nuevo usuario en el sistema.
+
+- **Método:** `POST`
+- **Endpoint:** `/api/auth/register`
+- **Acceso:** Público
+
+**Request Body (JSON):**
+```json
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "company_name": "Company Inc",
+  "phone": "1234567890",
+  "email": "user@example.com",
+  "password": "Password123!",
+  "confirm_password": "Password123!"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "message": "Usuario registrado. Por favor verifica tu email.",
+  "email": "user@example.com"
+}
+```
+
+### 4. Obtener Usuario Actual (`/api/auth/me`)
+Obtiene la información del usuario autenticado.
+
+- **Método:** `GET`
+- **Endpoint:** `/api/auth/me`
+- **Acceso:** Usuario Autenticado
+
+**Response (200 OK):**
+```json
+{
+  "user": {
+    "id": 1,
     "email": "user@example.com",
-    "password": "Password123!",
-    "confirm_password": "Password123!"
+    "first_name": "John",
+    "last_name": "Doe",
+    "role": "usuario"
   }
-  ```
-- **Response (201 Created)**:
-  ```json
-  {
-    "message": "Usuario registrado. Por favor verifica tu email.",
-    "email": "user@example.com"
-  }
-  ```
+}
+```
 
-#### 4. Obtener Usuario Actual (Me)
-- **Método**: `GET`
-- **URL**: `/api/auth/me`
-- **Descripción**: Obtiene la información del usuario autenticado basado en el token.
-- **Headers**: `Authorization: Bearer <token>`
-- **Response (200 OK)**:
-  ```json
-  {
-    "user": {
-      "id": 1,
-      "email": "user@example.com",
-      "first_name": "John",
-      "last_name": "Doe",
-      "role": "usuario"
-    }
-  }
-  ```
+### 5. Reenviar Verificación (`/api/auth/resend-verification`)
+Reenvía el correo de verificación de cuenta.
 
-#### 5. Reenviar Verificación
-- **Método**: `POST`
-- **URL**: `/api/auth/resend-verification`
-- **Descripción**: Reenvía el correo de verificación de email.
-- **Request Body**:
-  ```json
-  {
-    "email": "user@example.com"
-  }
-  ```
-- **Response (200 OK)**:
-  ```json
-  {
-    "message": "Correo de verificación reenviado exitosamente"
-  }
-  ```
+- **Método:** `POST`
+- **Endpoint:** `/api/auth/resend-verification`
+- **Acceso:** Público
 
-#### 6. Verificar Email
-- **Método**: `GET`
-- **URL**: `/api/auth/verify-email`
-- **Descripción**: Verifica el email del usuario mediante un token.
-- **Query Params**: `token` (string)
-- **Response**: Redirecciona a `/auth/login?verified=true` o devuelve error JSON.
+**Request Body (JSON):**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Correo de verificación reenviado exitosamente"
+}
+```
+
+### 6. Verificar Email (`/api/auth/verify-email`)
+Verifica el email mediante un token.
+
+- **Método:** `GET`
+- **Endpoint:** `/api/auth/verify-email`
+- **Acceso:** Público
+- **Query Params:** `?token=xyz...`
+
+**Response:**
+Redirecciona a `/auth/login?verified=true` o devuelve JSON de error.
 
 ---
 
-### Cotizaciones (`/api/quotes`)
+## Cotizaciones
 
-#### 1. Obtener Cotizaciones (Usuario)
-- **Método**: `GET`
-- **URL**: `/api/quotes`
-- **Descripción**: Obtiene las cotizaciones del usuario autenticado.
-- **Auth**: Requerido (Usuario).
-- **Response (200 OK)**: Array de objetos de cotización.
+### 1. Obtener Mis Cotizaciones (`/api/quotes`)
+Obtiene las cotizaciones del usuario actual.
 
-#### 2. Crear Cotización
-- **Método**: `POST`
-- **URL**: `/api/quotes`
-- **Descripción**: Crea una nueva cotización.
-- **Auth**: Requerido (Usuario).
-- **Request Body**:
-  ```json
+- **Método:** `GET`
+- **Endpoint:** `/api/quotes`
+- **Acceso:** Usuario Autenticado
+
+**Response (200 OK):**
+```json
+[
   {
-    "items": [
-      {
-        "producto": "Producto A",
-        "precio": 100,
-        "cantidad": 2
-      }
-    ]
+    "id": "uuid-1",
+    "numero_cotizacion": "COT-001",
+    "estado": "pendiente",
+    "created_at": "2024-01-01T10:00:00Z",
+    "total": 500
+  },
+  {
+    "id": "uuid-2",
+    "numero_cotizacion": "COT-002",
+    "estado": "aprobado",
+    "created_at": "2024-01-02T15:30:00Z",
+    "total": 1200
   }
-  ```
-- **Response (201 Created)**: Objeto de la cotización creada.
+]
+```
+
+### 2. Crear Cotización (`/api/quotes`)
+Crea una nueva solicitud de cotización.
+
+- **Método:** `POST`
+- **Endpoint:** `/api/quotes`
+- **Acceso:** Usuario Autenticado
+
+**Request Body (JSON):**
+```json
+{
+  "items": [
+    {
+      "producto": "Carga General",
+      "descripcion": "Electrónicos",
+      "peso": 500,
+      "volumen": 2.5
+    }
+  ]
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "uuid-new",
+  "numero_cotizacion": "COT-003",
+  "estado": "pendiente",
+  "created_at": "2024-12-15T12:00:00Z"
+}
+```
+
+### 3. Actualizar Cliente (`/api/quotes/[id]`)
+Actualiza información del cliente asociada a la cotización.
+
+- **Método:** `PUT`
+- **Endpoint:** `/api/quotes/[id]`
+- **Acceso:** Usuario Autenticado
+
+**Response (200 OK):**
+```json
+{
+  "id": "uuid-1",
+  "mensaje": "Información actualizada correctamente"
+}
+```
 
 ---
 
-### Administración (`/api/admin`)
+## Transporte
 
-#### 1. Obtener Usuarios
-- **Método**: `GET`
-- **URL**: `/api/admin/users`
-- **Descripción**: Obtiene lista de usuarios.
-- **Auth**: Requerido (Admin).
-- **Query Params**:
-  - `search`: (opcional) Filtro por texto.
-  - `role`: (opcional) Filtro por rol.
-- **Response (200 OK)**: Array de usuarios.
+### 1. Actualizar Transporte (`/api/admin/cotizaciones/[id]/transport`)
+Agrega una actualización de estado de transporte.
 
-#### 2. Crear Usuario (Admin)
-- **Método**: `POST`
-- **URL**: `/api/admin/users`
-- **Descripción**: Crea un usuario desde el panel de administración.
-- **Auth**: Requerido (Admin).
-- **Request Body**:
-  ```json
+- **Método:** `POST`
+- **Endpoint:** `/api/admin/cotizaciones/[id]/transport`
+- **Acceso:** Administrador
+
+**Request Body (JSON):**
+```json
+{
+  "estado": "En Tránsito",
+  "descripcion": "Salió del puerto de origen",
+  "ubicacion": "Miami, FL"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "trans-1",
+  "cotizacion_id": "uuid-1",
+  "estado": "En Tránsito",
+  "descripcion": "Salió del puerto de origen",
+  "ubicacion": "Miami, FL",
+  "created_at": "2024-12-15T12:05:00Z"
+}
+```
+
+---
+
+## Administración
+
+### 1. Obtener Usuarios (`/api/admin/users`)
+Lista de todos los usuarios registrados.
+
+- **Método:** `GET`
+- **Endpoint:** `/api/admin/users`
+- **Acceso:** Administrador
+
+**Response (200 OK):**
+```json
+[
   {
+    "id": 1,
     "first_name": "John",
     "last_name": "Doe",
-    "company_name": "Company",
-    "phone": "1234567890",
+    "email": "john@example.com",
+    "role": "usuario",
+    "status": "activo"
+  },
+  {
+    "id": 2,
+    "first_name": "Admin",
+    "last_name": "User",
     "email": "admin@example.com",
-    "password": "Password123!"
+    "role": "admin",
+    "status": "activo"
   }
-  ```
-- **Response (201 Created)**: Usuario creado.
+]
+```
 
-#### 3. Actualizar Usuario
-- **Método**: `PUT`
-- **URL**: `/api/admin/users/[id]`
-- **Descripción**: Actualiza un usuario existente.
-- **Auth**: Requerido (Admin).
-- **Request Body** (campos opcionales):
-  ```json
+### 2. Crear Usuario (`/api/admin/users`)
+Crea un usuario manualmente.
+
+- **Método:** `POST`
+- **Endpoint:** `/api/admin/users`
+- **Acceso:** Administrador
+
+**Request Body (JSON):**
+```json
+{
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "company_name": "Logistics Co",
+  "phone": "555-0123",
+  "email": "jane@example.com",
+  "password": "SecurePassword123!",
+  "role": "usuario"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": 3,
+  "email": "jane@example.com",
+  "message": "Usuario creado exitosamente"
+}
+```
+
+### 3. Actualizar Usuario (`/api/admin/users/[id]`)
+Edita datos de un usuario.
+
+- **Método:** `PUT`
+- **Endpoint:** `/api/admin/users/[id]`
+- **Acceso:** Administrador
+
+**Request Body (JSON):**
+```json
+{
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "role": "admin"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": 3,
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "role": "admin"
+}
+```
+
+### 4. Desactivar Usuario (`/api/admin/users/[id]`)
+Desactiva una cuenta de usuario.
+
+- **Método:** `DELETE`
+- **Endpoint:** `/api/admin/users/[id]`
+- **Acceso:** Administrador
+
+**Response (200 OK):**
+```json
+{
+  "message": "Usuario desactivado exitosamente"
+}
+```
+
+### 5. Obtener Todas las Cotizaciones (`/api/admin/cotizaciones`)
+Lista todas las cotizaciones del sistema.
+
+- **Método:** `GET`
+- **Endpoint:** `/api/admin/cotizaciones`
+- **Acceso:** Administrador
+
+**Response (200 OK):**
+```json
+[
   {
-    "first_name": "New Name",
-    "last_name": "New Last Name",
-    "company_name": "New Company",
-    "phone": "0987654321",
-    "role": "admin"
+    "id": "uuid-1",
+    "cliente": "John Doe",
+    "empresa": "Company Inc",
+    "numero_cotizacion": "COT-001",
+    "estado": "pendiente",
+    "fecha": "2024-01-01"
   }
-  ```
-- **Response (200 OK)**: Usuario actualizado.
+]
+```
 
-#### 4. Desactivar Usuario
-- **Método**: `DELETE`
-- **URL**: `/api/admin/users/[id]`
-- **Descripción**: Desactiva un usuario.
-- **Auth**: Requerido (Admin).
-- **Response (200 OK)**: `{ "message": "Usuario desactivado" }`
+### 6. Actualizar Estado Cotización (`/api/admin/cotizaciones/[id]`)
+Cambia el estado (ej. de pendiente a aprobado).
 
-#### 5. Obtener Cotizaciones (Admin)
-- **Método**: `GET`
-- **URL**: `/api/admin/cotizaciones`
-- **Descripción**: Obtiene todas las cotizaciones del sistema.
-- **Auth**: Requerido (Admin).
-- **Query Params**:
-  - `search`: (opcional)
-  - `estado`: (opcional) Filtro por estado ('pendiente', 'aprobado', etc).
-- **Response (200 OK)**: Array de cotizaciones.
+- **Método:** `PUT`
+- **Endpoint:** `/api/admin/cotizaciones/[id]`
+- **Acceso:** Administrador
 
-#### 6. Obtener Cotización por ID
-- **Método**: `GET`
-- **URL**: `/api/admin/cotizaciones/[id]`
-- **Descripción**: Obtiene detalles de una cotización específica.
-- **Auth**: Requerido (Admin).
-- **Response (200 OK)**: Objeto de cotización con items.
+**Request Body (JSON):**
+```json
+{
+  "estado": "aprobado"
+}
+```
 
-#### 7. Actualizar Estado de Cotización
-- **Método**: `PUT`
-- **URL**: `/api/admin/cotizaciones/[id]`
-- **Descripción**: Actualiza el estado de una cotización.
-- **Auth**: Requerido (Admin).
-- **Request Body**:
-  ```json
-  {
-    "estado": "aprobado" // o "pendiente", "desaprobado"
-  }
-  ```
-- **Response (200 OK)**: Cotización actualizada.
+**Response (200 OK):**
+```json
+{
+  "id": "uuid-1",
+  "estado": "aprobado",
+  "updated_at": "2024-12-15T12:10:00Z"
+}
+```
 
 ---
 
-### Dashboard (`/api/dashboard`)
+## Dashboard y Reportes
 
-#### 1. Estadísticas de Admin
-- **Método**: `GET`
-- **URL**: `/api/dashboard/admin-stats`
-- **Descripción**: Obtiene estadísticas generales para el dashboard de admin.
-- **Auth**: Requerido (Admin).
-- **Response (200 OK)**: Objeto con estadísticas (total usuarios, cotizaciones, ingresos, etc).
+### 1. Estadísticas Admin (`/api/dashboard/admin-stats`)
+Métricas generales para el panel administrativo.
 
-#### 2. Reportes de Admin
-- **Método**: `GET`
-- **URL**: `/api/dashboard/admin-reports`
-- **Descripción**: Obtiene datos para reportes y gráficos.
-- **Auth**: Requerido (Admin).
-- **Response (200 OK)**: Datos de reportes (top clientes, ventas por mes, etc).
+- **Método:** `GET`
+- **Endpoint:** `/api/dashboard/admin-stats`
+- **Acceso:** Administrador
 
-#### 3. Estadísticas de Usuario
-- **Método**: `GET`
-- **URL**: `/api/dashboard/user-stats`
-- **Descripción**: Obtiene estadísticas para el dashboard del usuario.
-- **Auth**: Requerido (Usuario).
-- **Response (200 OK)**: Objeto con estadísticas del usuario (mis cotizaciones, pendientes, etc).
+**Response (200 OK):**
+```json
+{
+  "totalUsers": 150,
+  "totalQuotes": 45,
+  "monthlyRevenue": 25000,
+  "activeShipments": 12
+}
+```
+
+### 2. Reportes Admin (`/api/dashboard/admin-reports`)
+Datos para gráficos de reportes.
+
+- **Método:** `GET`
+- **Endpoint:** `/api/dashboard/admin-reports`
+- **Acceso:** Administrador
+
+**Response (200 OK):**
+```json
+{
+  "salesByMonth": [
+    { "month": "Jan", "sales": 4000 },
+    { "month": "Feb", "sales": 3000 }
+  ],
+  "topClients": [
+    { "name": "Company A", "volume": 10000 },
+    { "name": "Company B", "volume": 8000 }
+  ]
+}
+```
+
+### 3. Estadísticas Usuario (`/api/dashboard/user-stats`)
+Métricas para el dashboard del cliente.
+
+- **Método:** `GET`
+- **Endpoint:** `/api/dashboard/user-stats`
+- **Acceso:** Usuario Autenticado
+
+**Response (200 OK):**
+```json
+{
+  "totalQuotes": 5,
+  "pendingQuotes": 1,
+  "inTransit": 2,
+  "completed": 2
+}
+```
+
+---
+
+## Notificaciones
+
+### 1. Obtener Notificaciones (`/api/notifications`)
+Lista de notificaciones recientes.
+
+- **Método:** `GET`
+- **Endpoint:** `/api/notifications`
+- **Acceso:** Usuario Autenticado
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": 101,
+    "title": "Cotización Aprobada",
+    "message": "Tu cotización #COT-001 ha sido aprobada.",
+    "read": false,
+    "created_at": "2024-12-15T10:00:00Z",
+    "link": "/dashboard/cotizacion/uuid-1"
+  }
+]
+```
+
+### 2. Marcar Notificación Leída (`/api/notifications/[id]/read`)
+Marca una notificación como leída.
+
+- **Método:** `POST`
+- **Endpoint:** `/api/notifications/[id]/read`
+- **Acceso:** Usuario Autenticado
+
+**Response (200 OK):**
+```json
+{
+  "success": true
+}
+```

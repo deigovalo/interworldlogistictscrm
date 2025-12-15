@@ -5,9 +5,9 @@ Este documento detalla cómo el proyecto **Interworld Logistics CRM** aborda las
 ## 1. A01: Broken Access Control (Pérdida de Control de Acceso)
 **Riesgo:** Usuarios no autorizados accediendo a datos o funciones que no les corresponden.
 **Implementación Actual:**
-- **Middleware de Autenticación:** Se utiliza `lib/middleware-auth.ts` para interceptar todas las peticiones a rutas protegidas. Verifica la existencia y validez del token de sesión antes de permitir el acceso.
-- **Validación de Roles:** El middleware inyecta headers `x-user-role` que pueden ser usados por las rutas API para restringir acciones específicas a administradores.
-- **Redirección:** Usuarios sin sesión válida son redirigidos automáticamente al login.
+- **Middleware de Autenticación:** Se utiliza `middleware.ts` para interceptar todas las peticiones a rutas protegidas (`/dashboard` y otras). Middleware verifica la existencia y validez del token de sesión.
+- **Validación de Roles:** En peticiones a API y páginas, se inyectan headers `x-user-role` validados para restringir acciones administrativas.
+- **Redirección:** Usuarios sin sesión válida intentando acceder a rutas protegidas son redirigidos al login. Usuarios logueados intentando acceder a rutas públicas (`/auth/*`) son redirigidos al dashboard.
 
 ## 2. A02: Cryptographic Failures (Fallas Criptográficas)
 **Riesgo:** Exposición de datos sensibles por falta de cifrado o algoritmos débiles.
@@ -42,7 +42,7 @@ Este documento detalla cómo el proyecto **Interworld Logistics CRM** aborda las
 ## 7. A07: Identification and Authentication Failures (Fallas de Identificación y Autenticación)
 **Riesgo:** Debilidades en la confirmación de identidad y manejo de sesiones.
 **Implementación Actual:**
-- **Session Fingerprinting:** La sesión se vincula al `User-Agent` y la dirección IP del cliente al momento del login. En cada petición subsiguiente (incluyendo rutas críticas como `auth/me`), se valida que el `User-Agent` coincida con el almacenado. Si se detecta una discrepancia, la sesión se invalida inmediatamente, protegiendo contra el robo de cookies (Session Hijacking).
+- **Session Fingerprinting:** La sesión se vincula al `User-Agent` del cliente. El middleware y funciones de sesión validan que el `User-Agent` de la petición coincida con el almacenado al momento del login. Si hay discrepancia, se asume un intento de robo de sesión y se invalida.
 - **Expiración de Sesión:** Los tokens tienen un tiempo de vida definido (7 días) y se validan contra la base de datos en cada petición.
 - **Complejidad de Contraseñas:** Zod impone requisitos de complejidad (minúsculas, mayúsculas, números, símbolos).
 

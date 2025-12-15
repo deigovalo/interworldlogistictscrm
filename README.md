@@ -9,6 +9,7 @@ Sistema de gestión de relaciones con clientes (CRM) para Interworld Logistics, 
 - **Base de Datos:** [Neon](https://neon.tech/) (PostgreSQL serverless).
 - **Autenticación:** Sistema personalizado con sesiones seguras (HttpOnly Cookies), Hashing PBKDF2, y Session Fingerprinting.
 - **Seguridad:** Cumplimiento con OWASP Top 10 (ver [OWASP.md](./OWASP.md)).
+- **Documentación API:** Referencia completa de endpoints en [APIS.md](./APIS.MD).
 
 ## Características Principales
 
@@ -16,6 +17,8 @@ Sistema de gestión de relaciones con clientes (CRM) para Interworld Logistics, 
 - **Panel de Administración:** Gestión de usuarios (crear, editar, desactivar), roles y permisos.
 - **Dashboard:** Vista general de estadísticas y métricas clave.
 - **Gestión de Cotizaciones:** Creación y seguimiento de cotizaciones para clientes.
+- **Seguimiento de Transporte:** Actualizaciones de estado y ubicación de envíos.
+- **Notificaciones:** Sistema de alertas para actualizaciones de cotizaciones y envíos.
 
 ## Configuración Local
 
