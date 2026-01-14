@@ -1,6 +1,9 @@
 # Interworld Logistics CRM
 
 Sistema de gestión de relaciones con clientes (CRM) para Interworld Logistics, construido con tecnologías web modernas para asegurar rendimiento, escalabilidad y seguridad.
+## Testing:
+
+Correo: admin@iworldsolutionss.com Contrasena: 5sHj8£N1wY3!
 
 ## Tecnologías
 
